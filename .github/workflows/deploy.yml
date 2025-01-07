@@ -51,20 +51,21 @@ jobs:
       - name: Remove existing 'LATEST' image from ECR
         run: |
           IMAGE_DIGEST=$(aws ecr describe-images \
-            --repository-name ${ECR_REPOSITORY} \
-            --image-ids imageTag=LATEST \
-            --region ${AWS_REGION} \
-            --query 'imageDetails[0].imageDigest' \
-            --output text)
+          --repository-name ${ECR_REPOSITORY} \
+          --image-ids imageTag=LATEST \
+          --region ${AWS_REGION} \
+          --query 'imageDetails[0].imageDigest' \
+          --output text 2>/dev/null || echo "None")
 
+          # Check if the image digest is valid
           if [ "$IMAGE_DIGEST" != "None" ]; then
-            echo "Deleting existing LATEST image with digest: $IMAGE_DIGEST"
-            aws ecr batch-delete-image \
+          echo "Deleting existing LATEST image with digest: $IMAGE_DIGEST"
+          aws ecr batch-delete-image \
               --repository-name ${ECR_REPOSITORY} \
               --image-ids imageDigest=$IMAGE_DIGEST \
               --region ${AWS_REGION}
           else
-            echo "No existing LATEST image found in ECR."
+          echo "No existing LATEST image found in ECR."
           fi
 
       # Build, tag, and push the Docker image to ECR
